@@ -7,8 +7,8 @@ db = SQLAlchemy()
 follower_table = Table(
     "followers",
     db.Model.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
-    Column("follower_id", ForeignKey("follower.id"), primary_key=True)
+    Column("follower_id", ForeignKey("user.id"), primary_key=True),
+    Column("following_id", ForeignKey("user.id"), primary_key=True)
 )
 
 class User(db.Model):
@@ -18,11 +18,13 @@ class User(db.Model):
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
     comments: Mapped[list["Comment"]] = relationship()
     posts: Mapped[list["Post"]] = relationship()
-    followers: Mapped[list["Follower"]] = relationship(
-        "Follower",
-        secondary=follower_table,
-        back_populates="followed_by"
-    )
+    following: Mapped[list["User"]] = relationship(
+        "User", 
+        secondary=follower_table, 
+        primaryjoin="follower_table.follower_id == User.id",
+        secondaryjoin="follower_table.following_id == User.id",
+        backref= "followers")
+ 
 
 
     def serialize(self):
@@ -31,15 +33,7 @@ class User(db.Model):
             "email": self.email,
             # do not serialize the password, its a security breach
         }
-    
-class Follower(db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    followed_by: Mapped[list[User]] = relationship(
-        "User",
-        secondary=follower_table,
-        back_populates="followers"
-    )
-    
+
     
 class Post(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
