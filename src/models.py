@@ -11,6 +11,7 @@ follower_table = Table(
     Column("following_id", ForeignKey("user.id"), primary_key=True)
 )
 
+
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
@@ -19,13 +20,17 @@ class User(db.Model):
     comments: Mapped[list["Comment"]] = relationship()
     posts: Mapped[list["Post"]] = relationship()
     following: Mapped[list["User"]] = relationship(
-        "User", 
-        secondary=follower_table, 
-        primaryjoin="follower_table.follower_id == User.id",
-        secondaryjoin="follower_table.following_id == User.id",
-        backref= "followers")
- 
-
+        "User",
+        secondary=follower_table,
+        primaryjoin=follower_table.c.follower_id == "user.id",
+        secondaryjoin=follower_table.c.following_id == "user.id",
+        back_populates="followers")
+    follower: Mapped[list["User"]] = relationship(
+        "User",
+        secondary=follower_table,
+        primaryjoin=follower_table.c.following_id == "user.id",
+        secondaryjoin=follower_table.c.follower_id == "user.id",
+        back_populates="following")
 
     def serialize(self):
         return {
@@ -34,7 +39,7 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
-    
+
 class Post(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     author: Mapped[User] = relationship(back_populates="posts")
@@ -48,7 +53,7 @@ class Post(db.Model):
             "comments": self.comments,
             "media": self.media
         }
-    
+
 
 class Comment(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -57,9 +62,6 @@ class Comment(db.Model):
     author: Mapped[User] = relationship(back_populates="comments")
     post: Mapped[Post] = relationship(back_populates="comments")
     post_id: Mapped[int] = mapped_column(ForeignKey(Post.id))
-    
-    # author: Mapped[User] = relationship(back_populates="comments")
-
 
     def serialize(self):
         return {
@@ -75,10 +77,7 @@ class Media(db.Model):
     posted_in: Mapped[Post] = relationship(back_populates="media")
 
     def serialize(self):
-        return{
+        return {
             "id": self.id,
             "url": self.url
         }
-    
-
-
