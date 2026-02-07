@@ -16,15 +16,15 @@ class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    comments: Mapped[list["Comment"]] = relationship()
-    posts: Mapped[list["Post"]] = relationship()
+    
+    comments: Mapped[list["Comment"]] = relationship(back_populates="author")
+    posts: Mapped[list["Post"]] = relationship(back_populates="author")
     following: Mapped[list["User"]] = relationship(
         "User",
         secondary=follower_table,
         primaryjoin=follower_table.c.follower_id == "user.id",
         secondaryjoin=follower_table.c.following_id == "user.id",
-        back_populates="followers")
+        back_populates="follower")
     follower: Mapped[list["User"]] = relationship(
         "User",
         secondary=follower_table,
@@ -44,8 +44,8 @@ class Post(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     author: Mapped[User] = relationship(back_populates="posts")
     user_id: Mapped[int] = mapped_column(ForeignKey(User.id))
-    comments: Mapped[list["Comment"]] = relationship()
-    media: Mapped[list["Media"]] = relationship()
+    comments: Mapped[list["Comment"]] = relationship(back_populates="post")
+    media: Mapped[list["Media"]] = relationship(back_populates="posted_in")
 
     def serialize(self):
         return {
