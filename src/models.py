@@ -22,14 +22,14 @@ class User(db.Model):
     following: Mapped[list["User"]] = relationship(
         "User",
         secondary=follower_table,
-        primaryjoin=follower_table.c.follower_id == "user.id",
-        secondaryjoin=follower_table.c.following_id == "user.id",
+        primaryjoin=(follower_table.c.follower_id == "user.id"),
+        secondaryjoin=(follower_table.c.following_id == "user.id"),
         back_populates="follower")
     follower: Mapped[list["User"]] = relationship(
         "User",
         secondary=follower_table,
-        primaryjoin=follower_table.c.following_id == "user.id",
-        secondaryjoin=follower_table.c.follower_id == "user.id",
+        primaryjoin=(follower_table.c.following_id == "user.id"),
+        secondaryjoin=(follower_table.c.follower_id == "user.id"),
         back_populates="following")
 
     def serialize(self):
